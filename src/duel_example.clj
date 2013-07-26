@@ -28,11 +28,16 @@
    Input$Keys/LEFT #(move-player (first players) (- move-speed) 0)
    Input$Keys/RIGHT #(move-player (first players) move-speed 0)})
 
-(defn draw-player [player]
-  (let [num (@player :num)
-        health (@player :health)
-        x (first (@player :pos))
-        y (second (@player :pos))]
+(defmacro defn-destr
+  "Automatic destructuring into parameters.
+  For functions with >1 args."
+  [name args body]
+  `(def ~name
+     (fn (~args ~body)
+       ([param-to-val#] (let [{:keys ~args} param-to-val#] ~body)))))
+
+(defn-destr draw-player [num health pos]
+  (let [[x y] pos]
     (draw-image (str "player" num "hurt" health) x y)))
 
 (defn draw-cb [delta]
@@ -43,7 +48,7 @@
                 (quit))))
           (render-scene []
             (draw-image "background" 0 0)
-            (doseq [player players] (draw-player player))
+            (doseq [player players] (draw-player @player))
             (draw-text "Test" (float 100) (float 100)))]
     (process-input)
     (render-scene)))
