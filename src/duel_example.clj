@@ -8,7 +8,7 @@
 
 (def move-speed (float 5.0))
 
-(defn gen-player [& num x y]
+(defn gen-player [[num x y]]
   (atom {:num num
          :pos [x y]
          :health 0
@@ -19,9 +19,9 @@
 
 (def players (map #(gen-player %) [[1 50 40] [2 520 400]]))
 
-(def move-player [player dx dy]
+(defn move-player [player dx dy]
   (let [oldpos (@player :pos)]
-    (reset! @player (assoc @player :pos [(+ (first oldpos) dx) (+ (second oldpos))]))))
+    (reset! player (assoc @player :pos [(+ (first oldpos) dx) (+ (second oldpos))]))))
 
 (def key-actions
   {Input$Keys/ESCAPE quit

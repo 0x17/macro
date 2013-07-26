@@ -60,7 +60,7 @@
 (defn get-image-dim [name]
   (let [region (.findRegion atlas name)]
     (if (not (nil? region))
-      ( (.getRegionWidth region) (.getRegionHeight region))
+      (vector (.getRegionWidth region) (.getRegionHeight region))
       (vector 0 0))))
 
 (defn set-font [name size]
