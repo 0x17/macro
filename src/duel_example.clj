@@ -4,7 +4,7 @@
 
 (defn init-cb []
   (set-font "font" 30)
-  (play-song "loop" true))
+  (comment (play-song "loop" true)))
 
 (def move-speed (float 5.0))
 
@@ -21,12 +21,18 @@
 
 (defn move-player [player dx dy]
   (let [oldpos (@player :pos)]
-    (reset! player (assoc @player :pos [(+ (first oldpos) dx) (+ (second oldpos))]))))
+    (reset! player (assoc @player :pos [(+ (first oldpos) dx) (+ (second oldpos) dy)]))))
 
 (def key-actions
-  {Input$Keys/ESCAPE quit
-   Input$Keys/LEFT #(move-player (first players) (- move-speed) 0)
-   Input$Keys/RIGHT #(move-player (first players) move-speed 0)})
+  {Input$Keys/ESCAPE  quit
+   Input$Keys/LEFT    #(move-player (first players) (- move-speed) 0)
+   Input$Keys/RIGHT   #(move-player (first players) move-speed 0)
+   Input$Keys/UP      #(move-player (first players) 0 move-speed)
+   Input$Keys/DOWN    #(move-player (first players) 0 (- move-speed))
+   Input$Keys/A       #(move-player (second players) (- move-speed) 0)
+   Input$Keys/D       #(move-player (second players) move-speed 0)
+   Input$Keys/W       #(move-player (second players) 0 move-speed)
+   Input$Keys/S       #(move-player (second players) 0 (- move-speed))})
 
 (defmacro defn-destr
   "Automatic destructuring into parameters.
@@ -40,6 +46,9 @@
   (let [[x y] pos]
     (draw-image (str "player" num "hurt" health) x y)))
 
+(defn draw-overlay []
+  (draw-text "Some text" (float 15) (float 470)))
+
 (defn draw-cb [delta]
   (letfn [(process-input []
             (doall (map #((key-actions %)) (filter key-pressed (keys key-actions))))
@@ -49,7 +58,7 @@
           (render-scene []
             (draw-image "background" 0 0)
             (doseq [player players] (draw-player @player))
-            (draw-text "Test" (float 100) (float 100)))]
+            (draw-overlay))]
     (process-input)
     (render-scene)))
 
