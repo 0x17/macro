@@ -101,9 +101,9 @@
               (when result (hit-player player))
               result))
           (bullet-bullet-coll [b1pos b2pos]
-          (let [b1-rect (rect-from-pos-dim b1pos bullet-dim)
-                b2-rect (rect-from-pos-dim b2pos bullet-dim)]
-            (if (Intersector/overlapRectangles b1-rect b2-rect) [b1pos b2pos] nil)))]
+            (let [b1-rect (rect-from-pos-dim b1pos bullet-dim)
+                  b2-rect (rect-from-pos-dim b2pos bullet-dim)]
+              (if (Intersector/overlapRectangles b1-rect b2-rect) [b1pos b2pos] nil)))]
     (foreach #(fassoc-in-place (nth players (first %)) :bullets
                 (fn [oldbullets] (filter (fn [b] (not (bullet-player-coll b (nth players (second %))))) oldbullets)))
       '([0 1] [1 0]))
