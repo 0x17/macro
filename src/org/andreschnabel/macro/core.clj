@@ -7,7 +7,7 @@
            [java.io File])
   (:require [org.andreschnabel.macro.utils :as utils]))
 
-(def ^:private scr-dims (atom (vector 0 0)))
+(def ^:private scr-dims (atom [0 0]))
 
 (utils/deflazy sb #(SpriteBatch.))
 (utils/deflazy atlas #(utils/atlas-for-dir (File. "src/data/")))
@@ -18,8 +18,8 @@
 
 (def ^:private font (atom nil))
 
-(defn scr-w [] (first @scr-dims))
-(defn scr-h [] (second @scr-dims))
+(defn scr-w [] (utils/width @scr-dims))
+(defn scr-h [] (utils/height @scr-dims))
 
 (defn init [caption scr-size init-cb draw-cb]
   (letfn [(dispose-all []

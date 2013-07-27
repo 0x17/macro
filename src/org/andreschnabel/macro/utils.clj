@@ -45,6 +45,11 @@
 (defmacro vec-scal-mul [v c]
   `(map * ~v (repeat 2 ~c)))
 
+(defmacro xcrd [v] `(first ~v))
+(defmacro ycrd [v] `(second ~v))
+(defmacro width [v] `(first ~v))
+(defmacro height [v] `(second ~v))
+
 (defmacro defn-destr [name args body]
   `(def ~name
      (fn (~args ~body)
@@ -72,3 +77,5 @@
 (defmacro limit-rate [sym min-delay & body]
   `(if (> (- (ticks) (put-or-keep last-calls ~sym ticks)) ~min-delay)
      ~(cons 'do (cons `(assoc-in-place last-calls ~sym (ticks)) body))))
+
+(defn ++ [x] (+ 1 x))
