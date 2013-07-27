@@ -61,8 +61,7 @@
    Input$Keys/CONTROL_RIGHT #(shoot p2)
    Input$Keys/ALT_RIGHT     #(shoot p2)})
 
-(deflazy bullet-move-vec
-  (fn [num] [(* (if (= num 1) 1.0 (- 1.0)) bullet-move-speed) 0.0]))
+(deflazy bullet-move-vec (fn [num] [(* (if (= num 1) 1.0 (- 1.0)) bullet-move-speed) 0.0]))
 
 (defn update-player [player]
   (when (player-dead? player)
@@ -88,11 +87,9 @@
   (draw-text (str "P1 score " (:kills @p1)) 100 100)
   (draw-text (str "P2 score " (:kills @p2)) 500 100))
 
-(defn rect-from-pos-dim [pos dim]
-  (Rectangle. (xcrd pos) (ycrd pos) (width (dim)) (height (dim))))
+(defn rect-from-pos-dim [pos dim] (Rectangle. (xcrd pos) (ycrd pos) (width (dim)) (height (dim))))
 
-(defn hit-player [player]
-  (when (not (player-dead? player)) (fassoc-in-place player :health ++)))
+(defn hit-player [player] (when (not (player-dead? player)) (fassoc-in-place player :health ++)))
 
 (defn bullet-player-coll [bpos player]
   (let [bullet-rect (rect-from-pos-dim bpos bullet-dim)
@@ -102,9 +99,8 @@
     result))
 
 (defn check-collisions []
-  (foreach
-    #(fassoc-in-place (nth players (first %)) :bullets
-       (fn [oldbullets] (filter (fn [b] (not (bullet-player-coll b (nth players (second %))))) oldbullets)))
+  (foreach #(fassoc-in-place (nth players (first %)) :bullets
+              (fn [oldbullets] (filter (fn [b] (not (bullet-player-coll b (nth players (second %))))) oldbullets)))
     '([0 1] [1 0])))
 
 (defn draw-cb [delta]
@@ -122,7 +118,6 @@
     (process-input)
     (render-scene)))
 
-(defn -main [args]
-  (init "DuelExample" [640 480] init-cb draw-cb))
+(defn -main [args] (init "DuelExample" [640 480] init-cb draw-cb))
 
 (-main (into-array []))
