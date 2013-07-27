@@ -23,7 +23,7 @@
          :bullets '()
          :death-ticks 0}))
 
-(def players (map #(gen-player %) [[1 50 40] [2 520 400]]))
+(def players (map gen-player [[1 50 40] [2 520 400]]))
 (defbatch p1 (first players)
           p2 (second players))
 
@@ -107,7 +107,7 @@
     (foreach #(fassoc-in-place (nth players (first %)) :bullets
                 (fn [oldbullets] (filter (fn [b] (not (bullet-player-coll b (nth players (second %))))) oldbullets)))
       '([0 1] [1 0]))
-    (let [colliding-pairs (remove #(nil? %) (map #(bullet-bullet-coll %1 %2) (:bullets @p1) (:bullets @p2)))
+    (let [colliding-pairs (remove nil? (map bullet-bullet-coll (:bullets @p1) (:bullets @p2)))
           colliding-p1 (map first colliding-pairs)
           colliding-p2 (map second colliding-pairs)]
       (fassoc-in-place p1 :bullets #(set-diff % colliding-p1))
