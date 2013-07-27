@@ -54,14 +54,14 @@
 
 (defn draw-cb [delta]
   (letfn [(process-input []
-            (doall (map #((key-actions %)) (filter key-pressed (keys key-actions))))
+            (foreach #((key-actions %)) (filter key-pressed (keys key-actions)))
             (let [mstate (mouse-state)]
               (if (mstate :lmb)
                 (let [offset-pos (map - (mstate :pos) (map * (player-dim) (repeat-vec 2 0.5)))]
                   (assoc-in-place (first players) :pos offset-pos)))))
           (render-scene []
             (draw-image "background" 0 0)
-            (doseq [player players] (draw-player @player))
+            (foreach #(draw-player @%) players)
             (draw-overlay))]
     (process-input)
     (render-scene)))

@@ -56,3 +56,6 @@
     (->> pairs
          group-pairs
          (map #(list 'def (first %) (second %))))))
+
+(defmacro foreach [f coll]
+  `(doseq [elem# ~coll] (~f elem#)))

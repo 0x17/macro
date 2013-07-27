@@ -23,8 +23,8 @@
 
 (defn init [caption scr-size init-cb draw-cb]
   (letfn [(dispose-all []
-            (doall (map utils/safe-dispose (vals @sounds)))
-            (doall (map utils/safe-dispose (vals @songs)))
+            (utils/foreach utils/safe-dispose (vals @sounds))
+            (utils/foreach utils/safe-dispose (vals @songs))
             (utils/safe-dispose @font)
             (utils/safe-dispose (atlas))
             (utils/safe-dispose (sb)))
