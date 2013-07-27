@@ -27,3 +27,32 @@
 (defn safe-dispose [obj]
   (if (not (nil? obj))
     (.dispose obj)))
+
+(defn assoc-in-place [m-atom key val]
+  (reset! m-atom (assoc @m-atom key val)))
+
+(defn fassoc-in-place [m-atom key f]
+  (reset! m-atom (assoc @m-atom key (f (@m-atom key)))))
+
+(defn repeat-vec [n x]
+  (into [] (repeat n x)))
+
+(defmacro defn-destr [name args body]
+  `(def ~name
+     (fn (~args ~body)
+       ([param-to-val#] (let [{:keys ~args} param-to-val#] ~body)))))
+
+(defmacro deflazy [name init-func]
+  `(def ~name (memoize ~init-func)))
+
+(defn group-pairs [elems]
+  (if (empty? elems)
+    '()
+    (cons [(first elems) (second elems)]
+      (group-pairs (-> elems rest rest)))))
+
+(defmacro defbatch [& pairs]
+  (cons 'do
+    (->> pairs
+         group-pairs
+         (map #(list 'def (first %) (second %))))))

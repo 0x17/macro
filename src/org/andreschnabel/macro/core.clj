@@ -9,8 +9,8 @@
 
 (def ^:private scr-dims (atom (vector 0 0)))
 
-(def ^:private sb (memoize #(SpriteBatch.)))
-(def ^:private atlas (memoize #(utils/atlas-for-dir (File. "src/data/"))))
+(utils/deflazy sb #(SpriteBatch.))
+(utils/deflazy atlas #(utils/atlas-for-dir (File. "src/data/")))
 
 (def ^:private sounds (atom {}))
 (def ^:private songs (atom {}))
@@ -58,7 +58,7 @@
         (.draw (sb) region x y (+ x (/ w 2.0)) (+ y (/ h 2.0)) w h sx sy rz))))))
 
 (defn get-image-dim [name]
-  (let [region (.findRegion atlas name)]
+  (let [region (.findRegion (atlas) name)]
     (if (not (nil? region))
       (vector (.getRegionWidth region) (.getRegionHeight region))
       (vector 0 0))))
@@ -88,7 +88,7 @@
 
 (defn key-pressed [key] (.isKeyPressed Gdx/input key))
 
-(defn mouse-state [] {:pos (vector (.getX Gdx/input) (.getY Gdx/input))
+(defn mouse-state [] {:pos (vector (.getX Gdx/input) (- (scr-h) (.getY Gdx/input)))
                       :lmb (.isButtonPressed Gdx/input Input$Buttons/LEFT)
                       :mmb (.isButtonPressed Gdx/input Input$Buttons/MIDDLE)
                       :rmb (.isButtonPressed Gdx/input Input$Buttons/RIGHT)})
