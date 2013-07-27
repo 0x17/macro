@@ -79,3 +79,6 @@
      ~(cons 'do (cons `(assoc-in-place last-calls ~sym (ticks)) body))))
 
 (defn ++ [x] (+ 1 x))
+
+(defn set-diff [a b]
+  (remove (fn [e] (some #(= e %) b)) a))

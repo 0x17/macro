@@ -43,7 +43,7 @@
 
 (defn shoot [player]
   (when (not (player-dead? player))
-    (limit-rate :shooting reload-time
+    (limit-rate (keyword (str "shooting" (:num @player))) reload-time
       (fassoc-in-place player :bullets #(cons (vec-add (:pos @player) (vec-scal-mul (player-dim) 0.25)) %))
       (play-sound "shot"))))
 
@@ -54,11 +54,13 @@
    Input$Keys/UP            #(move-player p1 0 move-speed)
    Input$Keys/DOWN          #(move-player p1 0 (- move-speed))
    Input$Keys/CONTROL_LEFT  #(shoot p1)
+   Input$Keys/SPACE         #(shoot p1)
    Input$Keys/A             #(move-player p2 (- move-speed) 0)
    Input$Keys/D             #(move-player p2 move-speed 0)
    Input$Keys/W             #(move-player p2 0 move-speed)
    Input$Keys/S             #(move-player p2 0 (- move-speed))
    Input$Keys/CONTROL_RIGHT #(shoot p2)
+   Input$Keys/ENTER         #(shoot p2)
    Input$Keys/ALT_RIGHT     #(shoot p2)})
 
 (deflazy bullet-move-vec (fn [num] [(* (if (= num 1) 1.0 (- 1.0)) bullet-move-speed) 0.0]))
@@ -87,21 +89,29 @@
   (draw-text (str "P1 score " (:kills @p1)) 100 100)
   (draw-text (str "P2 score " (:kills @p2)) 500 100))
 
-(defn rect-from-pos-dim [pos dim] (Rectangle. (xcrd pos) (ycrd pos) (width (dim)) (height (dim))))
-
 (defn hit-player [player] (when (not (player-dead? player)) (fassoc-in-place player :health ++)))
 
-(defn bullet-player-coll [bpos player]
-  (let [bullet-rect (rect-from-pos-dim bpos bullet-dim)
-        player-rect (rect-from-pos-dim (:pos @player) player-dim)
-        result (Intersector/overlapRectangles bullet-rect player-rect)]
-    (when result (hit-player player))
-    result))
-
 (defn check-collisions []
-  (foreach #(fassoc-in-place (nth players (first %)) :bullets
-              (fn [oldbullets] (filter (fn [b] (not (bullet-player-coll b (nth players (second %))))) oldbullets)))
-    '([0 1] [1 0])))
+  (letfn [(rect-from-pos-dim [pos dim]
+            (Rectangle. (xcrd pos) (ycrd pos) (width (dim)) (height (dim))))
+          (bullet-player-coll [bpos player]
+            (let [bullet-rect (rect-from-pos-dim bpos bullet-dim)
+                  player-rect (rect-from-pos-dim (:pos @player) player-dim)
+                  result (Intersector/overlapRectangles bullet-rect player-rect)]
+              (when result (hit-player player))
+              result))
+          (bullet-bullet-coll [b1pos b2pos]
+          (let [b1-rect (rect-from-pos-dim b1pos bullet-dim)
+                b2-rect (rect-from-pos-dim b2pos bullet-dim)]
+            (if (Intersector/overlapRectangles b1-rect b2-rect) [b1pos b2pos] nil)))]
+    (foreach #(fassoc-in-place (nth players (first %)) :bullets
+                (fn [oldbullets] (filter (fn [b] (not (bullet-player-coll b (nth players (second %))))) oldbullets)))
+      '([0 1] [1 0]))
+    (let [colliding-pairs (remove #(nil? %) (map #(bullet-bullet-coll %1 %2) (:bullets @p1) (:bullets @p2)))
+          colliding-p1 (map first colliding-pairs)
+          colliding-p2 (map second colliding-pairs)]
+      (fassoc-in-place p1 :bullets #(set-diff % colliding-p1))
+      (fassoc-in-place p2 :bullets #(set-diff % colliding-p2)))))
 
 (defn draw-cb [delta]
   (letfn [(process-input []
