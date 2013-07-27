@@ -5,8 +5,7 @@
 
 (defn init-cb []
   (set-font "font" 30)
-  (comment
-    (play-song "loop" true)))
+  (play-song "loop" true))
 
 (defbatch move-speed 5.0
           bullet-move-speed 10.0
