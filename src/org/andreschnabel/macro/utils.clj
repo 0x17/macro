@@ -4,6 +4,8 @@
            [com.badlogic.gdx.files FileHandle]
            [com.badlogic.gdx.graphics Pixmap Pixmap$Format Texture Texture$TextureFilter]))
 
+(defn ticks [] (System/currentTimeMillis))
+
 (defn filename-wout-ext [f]
   (let [parts (.split (.getName f) "\\.")]
     (aget parts (- (alength parts) 2))))
@@ -65,3 +67,8 @@
 
 (defmacro foreach [f coll]
   `(doseq [elem# ~coll] (~f elem#)))
+
+(def last-calls (atom {}))
+(defmacro limit-rate [sym min-delay & body]
+  `(if (> (- (ticks) (put-or-keep last-calls ~sym ticks)) ~min-delay)
+     ~(cons 'do (cons `(assoc-in-place last-calls ~sym (ticks)) body))))

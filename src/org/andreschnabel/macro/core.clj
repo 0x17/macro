@@ -92,5 +92,3 @@
                       :lmb (.isButtonPressed Gdx/input Input$Buttons/LEFT)
                       :mmb (.isButtonPressed Gdx/input Input$Buttons/MIDDLE)
                       :rmb (.isButtonPressed Gdx/input Input$Buttons/RIGHT)})
-
-(defn ticks [] (System/currentTimeMillis))

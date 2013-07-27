@@ -18,9 +18,7 @@
          :pos [x y]
          :health 0
          :kills 0
-         :bullets '()
-         :last-shot-ticks 0
-         :death-ticks 0}))
+         :bullets '()}))
 
 (def players (map #(gen-player %) [[1 50 40] [2 520 400]]))
 (defbatch p1 (first players)
@@ -30,11 +28,9 @@
   (fassoc-in-place player :pos #(vec-add % [dx dy])))
 
 (defn shoot [player]
-  (when (> (- (ticks) (:last-shot-ticks @player)) reload-time)
-    (fassoc-in-place player :bullets
-      #(cons (vec-add (:pos @player) (vec-scal-mul (player-dim) 0.25)) %))
-    (play-sound "shot")
-    (assoc-in-place player :last-shot-ticks (ticks))))
+  (limit-rate :shooting reload-time
+    (fassoc-in-place player :bullets #(cons (vec-add (:pos @player) (vec-scal-mul (player-dim) 0.25)) %))
+    (play-sound "shot")))
 
 (def key-actions
   {Input$Keys/ESCAPE        quit
