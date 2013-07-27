@@ -37,6 +37,12 @@
 (defn repeat-vec [n x]
   (into [] (repeat n x)))
 
+(defmacro vec-add [u v]
+  `(map + ~u ~v))
+
+(defmacro vec-scal-mul [v c]
+  `(map * ~v (repeat 2 ~c)))
+
 (defmacro defn-destr [name args body]
   `(def ~name
      (fn (~args ~body)

@@ -18,39 +18,53 @@
          :pos [x y]
          :health 0
          :kills 0
-         :bullets []
-         :last-shot-ticks (long 0)
-         :death-ticks (long 0)}))
+         :bullets '()
+         :last-shot-ticks 0
+         :death-ticks 0}))
 
 (def players (map #(gen-player %) [[1 50 40] [2 520 400]]))
+(defbatch p1 (first players)
+          p2 (second players))
 
 (defn move-player [player dx dy]
-  (fassoc-in-place player :pos
-    (fn [oldpos] [(+ (first oldpos) dx) (+ (second oldpos) dy)])))
+  (fassoc-in-place player :pos #(vec-add % [dx dy])))
 
-(defn shoot [player])
+(defn shoot [player]
+  (when (> (- (ticks) (:last-shot-ticks @player)) reload-time)
+    (fassoc-in-place player :bullets
+      #(cons (vec-add (:pos @player) (vec-scal-mul (player-dim) 0.25)) %))
+    (play-sound "shot")
+    (assoc-in-place player :last-shot-ticks (ticks))))
 
 (def key-actions
   {Input$Keys/ESCAPE        quit
-   Input$Keys/LEFT          #(move-player (first players) (- move-speed) 0)
-   Input$Keys/RIGHT         #(move-player (first players) move-speed 0)
-   Input$Keys/UP            #(move-player (first players) 0 move-speed)
-   Input$Keys/DOWN          #(move-player (first players) 0 (- move-speed))
-   Input$Keys/CONTROL_LEFT  #(shoot (first players))
-   Input$Keys/A             #(move-player (second players) (- move-speed) 0)
-   Input$Keys/D             #(move-player (second players) move-speed 0)
-   Input$Keys/W             #(move-player (second players) 0 move-speed)
-   Input$Keys/S             #(move-player (second players) 0 (- move-speed))
-   Input$Keys/CONTROL_RIGHT #(shoot (second players))
-   Input$Keys/ALT_RIGHT     #(shoot (second players))})
+   Input$Keys/LEFT          #(move-player p1 (- move-speed) 0)
+   Input$Keys/RIGHT         #(move-player p1 move-speed 0)
+   Input$Keys/UP            #(move-player p1 0 move-speed)
+   Input$Keys/DOWN          #(move-player p1 0 (- move-speed))
+   Input$Keys/CONTROL_LEFT  #(shoot p1)
+   Input$Keys/A             #(move-player p2 (- move-speed) 0)
+   Input$Keys/D             #(move-player p2 move-speed 0)
+   Input$Keys/W             #(move-player p2 0 move-speed)
+   Input$Keys/S             #(move-player p2 0 (- move-speed))
+   Input$Keys/CONTROL_RIGHT #(shoot p2)
+   Input$Keys/ALT_RIGHT     #(shoot p2)})
 
-(defn-destr draw-player [num health pos]
+(deflazy bullet-move-vec
+  (fn [num] [(* (if (= num 1) 1.0 (- 1.0)) bullet-move-speed) 0.0]))
+
+(defn update-player [player]
+  (fassoc-in-place player :bullets
+    (fn [oldbullets] (map #(vec-add % (bullet-move-vec (:num @player))) oldbullets))))
+
+(defn-destr draw-player [num health pos bullets]
   (let [[x y] pos]
-    (draw-image (str "player" num "hurt" health) x y)))
+    (draw-image (str "player" num "hurt" health) x y)
+    (foreach #(draw-image "bullet" (first %) (second %)) bullets)))
 
 (defn draw-overlay []
-  (draw-text (str "P1 score " (:kills @(first players))) 100 100)
-  (draw-text (str "P2 score " (:kills @(second players))) 500 100))
+  (draw-text (str "P1 score " (:kills @p1)) 100 100)
+  (draw-text (str "P2 score " (:kills @p2)) 500 100))
 
 (defn draw-cb [delta]
   (letfn [(process-input []
@@ -58,10 +72,10 @@
             (let [mstate (mouse-state)]
               (if (mstate :lmb)
                 (let [offset-pos (map - (mstate :pos) (map * (player-dim) (repeat-vec 2 0.5)))]
-                  (assoc-in-place (first players) :pos offset-pos)))))
+                  (assoc-in-place p1 :pos offset-pos)))))
           (render-scene []
             (draw-image "background" 0 0)
-            (foreach #(draw-player @%) players)
+            (foreach #(do (update-player %) (draw-player @%)) players)
             (draw-overlay))]
     (process-input)
     (render-scene)))
