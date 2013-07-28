@@ -39,14 +39,16 @@
 (defn fassoc [m key f]
   (assoc m key (f (m key))))
 
+(defmacro to-vec [coll] `(into [] ~coll))
+
 (defn repeat-vec [n x]
-  (into [] (repeat n x)))
+  (to-vec (repeat n x)))
 
 (defmacro vec-add [u v]
-  `(map + ~u ~v))
+  `(mapv + ~u ~v))
 
 (defmacro vec-scal-mul [v c]
-  `(map * ~v (repeat 2 ~c)))
+  `(mapv * ~v (repeat 2 ~c)))
 
 (defmacro xcrd [v] `(first ~v))
 (defmacro ycrd [v] `(second ~v))
