@@ -21,6 +21,7 @@
 (defn scr-w [] (utils/width @scr-dims))
 (defn scr-h [] (utils/height @scr-dims))
 
+(def state (atom nil))
 (defn init [caption scr-size init-cb draw-cb]
   (letfn [(dispose-all []
             (utils/foreach utils/safe-dispose (vals @sounds))
@@ -32,13 +33,13 @@
             (proxy [ApplicationListener] []
               (create []
                 (.glClearColor Gdx/gl 0.0 0.0 0.0 1.0)
-                (init-cb))
+                (reset! state (init-cb)))
               (resize [w h]
                 (reset! scr-dims (vector w h)))
               (render []
                 (.glClear Gdx/gl GL10/GL_COLOR_BUFFER_BIT)
                 (.begin (sb))
-                (draw-cb (.getDeltaTime Gdx/graphics))
+                (swap! state (partial draw-cb (.getDeltaTime Gdx/graphics)))
                 (.end (sb)))
               (pause [])
               (resume [])

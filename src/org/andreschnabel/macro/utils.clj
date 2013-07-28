@@ -36,6 +36,9 @@
 (defn fassoc-in-place [m-atom key f]
   (reset! m-atom (assoc @m-atom key (f (@m-atom key)))))
 
+(defn fassoc [m key f]
+  (assoc m key (f (m key))))
+
 (defn repeat-vec [n x]
   (into [] (repeat n x)))
 
