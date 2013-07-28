@@ -87,23 +87,23 @@
 (defn player-scores [player] (fassoc player :kills ++))
 
 (defn try-die [player]
-  (assoc-if just-died? player :death-ticks (ticks)))
+  (assoc-if (just-died? player) player :death-ticks (ticks)))
 
 (defn try-respawn [player]
   (merge-if-elsel (and (player-dead? player) (> (- (ticks) (:death-ticks player)) death-time))
     player {:death-ticks 0 :health 0}))
 
-(defn update-player [player other-player]
+(defn update-player [player]
   [(just-died? player) (-> player try-die try-respawn update-bullets)])
 
 (defn update-score [player scored?]
   (if scored? (player-scores player) player))
 
 (defn update-players [players]
-  (let [p1p2-pair (update-player (players 0) (players 1))
-        p2p1-pair (update-player (players 1) (players 0))]
-    '((update-score (p1p2-pair 1) (p2p1-pair 0))
-      (update score (p1p2-pair 1) (p1p2-pair 0)))))
+  (let [p1-pair (update-player (players 0))
+        p2-pair (update-player (players 1))]
+    [(update-score (p1-pair 1) (p2-pair 0))
+     (update-score (p2-pair 1) (p1-pair 0))]))
 
 ;;; COLLISIONS ---------------------------------------------------------------------------------------------------------
 (defn rect-from-pos-dim [pos dim]
@@ -111,7 +111,7 @@
 
 (defn player-bullet-coll [player bpos]
   (let [bullet-rect (rect-from-pos-dim bpos bullet-dim)
-        player-rect (rect-from-pos-dim (:pos @player) player-dim)]
+        player-rect (rect-from-pos-dim (:pos player) player-dim)]
     (Intersector/overlapRectangles bullet-rect player-rect)))
 
 (defn bullet-bullet-coll [b1pos b2pos bdim]
@@ -122,16 +122,14 @@
 (defn check-player-bullet-collisions [players pdim bdim]
   (letfn [(remove-collided [x2 oldbullets] (remove (partial player-bullet-coll (nth players x2) pdim bdim) oldbullets))
           (check-collision [[x1 x2]] (fassoc (nth players x1) :bullets (partial remove-collided x2)))]
-    (map check-collision '([0 1] [1 0]))))
+    (mapv check-collision  [[0 1] [1 0]])))
 
 (defn check-bullet-bullet-collisions [players]
-  (let [p1 (first players)
-        p2 (second players)
-        colliding-pairs (remove nil? (map bullet-bullet-coll (:bullets p1) (:bullets p2)))
+  (let [colliding-pairs (remove nil? (map bullet-bullet-coll (:bullets (players 0)) (:bullets (players 1))))
         colliding-p1 (map first colliding-pairs)
         colliding-p2 (map second colliding-pairs)]
-    '((fassoc p1 :bullets #(set-diff % colliding-p1))
-       (fassoc p2 :bullets #(set-diff % colliding-p2)))))
+    [(fassoc (players 0) :bullets #(set-diff % colliding-p1))
+     (fassoc (players 1) :bullets #(set-diff % colliding-p2))]))
 
 ;;; DRAWING ------------------------------------------------------------------------------------------------------------
 (defn-destr draw-player [num health pos bullets]
@@ -153,7 +151,7 @@
     #(fassoc % :players update-players)
     #(fassoc % :players (comp check-bullet-bullet-collisions check-player-bullet-collisions))))
 
-(defn draw-cb [delta state] (render-scene (process-input state)))
+(defn draw-cb [delta state] (-> state process-input render-scene))
 
 ;;; ENTRYPOINT ---------------------------------------------------------------------------------------------------------
 (defn init-cb []

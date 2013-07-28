@@ -33,7 +33,27 @@
 (deftest test-update-bullets
   (is (= {:num 1 :bullets '([20.0 10.0])} (update-bullets {:num 1 :bullets '([10.0 10.0])}))))
 
-;(deftest test-update-player)
+(deftest test-just-died?
+  (is (just-died? {:health 3 :death-ticks 0}))
+  (is (not (just-died? {:health 2 :death-ticks 0})))
+  (is (not (just-died? {:health 3 :death-ticks 23}))))
+
+(deftest test-player-scores
+  (is (= {:kills 1} (player-scores {:kills 0}))))
+
+(ns org.andreschnabel.macro.utils)
+(defn ticks [] 23)
+(ns duel-example.test (:use duel-example clojure.test))
+
+(deftest test-try-die
+  (is (= {:health 3 :death-ticks 23} (try-die {:health 3 :death-ticks 0})))
+  (is (= {:health 2 :death-ticks 0} (try-die {:health 2 :death-ticks 0}))))
+
+(deftest test-update-players
+  (let [result [{:num 1 :health 3 :kills 0 :bullets '() :death-ticks 23}
+                {:num 2 :health 0 :kills 1 :bullets '() :death-ticks 0}]]
+    (is (= result (update-players [{:num 1 :health 3 :kills 0 :bullets '() :death-ticks 0}
+                                   {:num 2 :health 0 :kills 0 :bullets '() :death-ticks 0}])))))
 
 (deftest test-hit-player
   (is (= {:health 1} (hit-player {:health 0})))
