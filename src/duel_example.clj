@@ -82,17 +82,28 @@
         (map (partial vec-addf (bullet-move-vec (:num player))))
         (filter #(< (- (width bullet-dim)) (xcrd %) (width scr-dim)))))))
 
+(defn just-died? [player] (and (player-dead? player) (= (:death-ticks player) 0)))
+
+(defn player-scores [player] (fassoc player :kills ++))
+
+(defn try-die [player]
+  (assoc-if just-died? player :death-ticks (ticks)))
+
+(defn try-respawn [player]
+  (merge-if-elsel (and (player-dead? player) (> (- (ticks) (:death-ticks player)) death-time))
+    player {:death-ticks 0 :health 0}))
+
 (defn update-player [player other-player]
-  (when (player-dead? player)
-    (when (= (:death-ticks player) 0)
-      (assoc player :death-ticks (ticks))
-      (fassoc other-player :kills ++))
-    (when (> (- (ticks) (:death-ticks player)) death-time)
-      (merge player {:death-ticks 0 :health 0}))))
+  [(just-died? player) (-> player try-die try-respawn update-bullets)])
+
+(defn update-score [player scored?]
+  (if scored? (player-scores player) player))
 
 (defn update-players [players]
-  '((update-player (players 0) (players 1))
-     (update-player (players 1) (players 0))))
+  (let [p1p2-pair (update-player (players 0) (players 1))
+        p2p1-pair (update-player (players 1) (players 0))]
+    '((update-score (p1p2-pair 1) (p2p1-pair 0))
+      (update score (p1p2-pair 1) (p1p2-pair 0)))))
 
 ;;; COLLISIONS ---------------------------------------------------------------------------------------------------------
 (defn rect-from-pos-dim [pos dim]

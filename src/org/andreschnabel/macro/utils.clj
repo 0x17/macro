@@ -39,6 +39,12 @@
 (defn fassoc [m key f]
   (assoc m key (f (m key))))
 
+(defn assoc-if [cond m key val]
+  (if cond (assoc m key val) m))
+
+(defn merge-if-elsel [cond m1 m2]
+  (if cond (merge m1 m2) m1))
+
 (defmacro to-vec [coll] `(into [] ~coll))
 
 (defn repeat-vec [n x]
