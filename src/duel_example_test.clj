@@ -16,7 +16,7 @@
 
 (deftest test-move-player
   (is (= {:num 1 :pos [23 8] :health 0}
-        (move-player {:num 1 :pos [10 10] :health 0} 13 (- 2)))))
+        (move-player 13 (- 2) {:num 1 :pos [10 10] :health 0}))))
 
 (ns org.andreschnabel.macro.core)
 (defn play-sound [str])
@@ -30,9 +30,10 @@
   (is (= (pos? (xcrd (bullet-move-vec 1)))))
   (is (= 0.0 (ycrd (bullet-move-vec 1)) (ycrd (bullet-move-vec 2)))))
 
-(deftest test-update-player
-  (is (= {:num 1 :bullets '([20.0 10.0])}
-        (update-player {:num 1 :bullets '([10.0 10.0])} {}))))
+(deftest test-update-bullets
+  (is (= {:num 1 :bullets '([20.0 10.0])} (update-bullets {:num 1 :bullets '([10.0 10.0])}))))
+
+;(deftest test-update-player)
 
 (deftest test-hit-player
   (is (= {:health 1} (hit-player {:health 0})))

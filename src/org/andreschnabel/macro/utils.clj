@@ -44,6 +44,9 @@
 (defn repeat-vec [n x]
   (to-vec (repeat n x)))
 
+(defn vec-addf [u v]
+  [(+ (u 0) (v 0)) (+ (u 1) (v 1))])
+
 (defmacro vec-add [u v]
   `(mapv + ~u ~v))
 
