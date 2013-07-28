@@ -43,9 +43,9 @@
 (defn shoot [player]
   (if (player-dead? player)
     player
-    (limit-rate (keyword (str "shooting" (:num @player))) reload-time
+    (limit-rate (keyword (str "shooting" (:num player))) reload-time
       (play-sound "shot")
-      (fassoc player :bullets #(cons (vec-add (:pos @player) (vec-scal-mul (player-dim) 0.25)) %)))))
+      (fassoc player :bullets #(cons (vec-add (:pos player) (vec-scal-mul player-dim 0.25)) %)))))
 
 (def key-actions
   {Input$Keys/LEFT          [#(move-player % (- move-speed) 0) 0]
@@ -75,7 +75,7 @@
     (fn [oldbullets]
       (->> oldbullets
            (map (fn [bpos] (vec-add bpos (bullet-move-vec (:num player)))))
-           (filter (fn [bpos] (< (- (width (bullet-dim))) (xcrd bpos) (width scr-dim))))))))
+           (filter (fn [bpos] (< (- (width bullet-dim)) (xcrd bpos) (width scr-dim))))))))
 
 (defn-destr draw-player [num health pos bullets]
   (let [[x y] pos]

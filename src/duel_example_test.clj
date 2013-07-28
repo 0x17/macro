@@ -1,5 +1,7 @@
 (ns duel-example.test
-  (:use duel-example clojure.test))
+  (:use duel-example
+        clojure.test
+        (org.andreschnabel.macro core utils)))
 
 (deftest test-player-in-bounds
   (is (player-in-bounds 1 [10 10]))
@@ -15,6 +17,22 @@
 (deftest test-move-player
   (is (= {:num 1 :pos [23 8] :health 0}
         (move-player {:num 1 :pos [10 10] :health 0} 13 (- 2)))))
+
+(ns org.andreschnabel.macro.core)
+(defn play-sound [str])
+(ns duel-example.test (:use duel-example clojure.test))
+(deftest test-shoot
+  (is (= {:num 1 :pos [10 10] :health 0 :bullets '([22.5 22.5])}
+        (shoot {:num 1 :pos [10 10] :health 0 :bullets '()}))))
+
+(deftest test-bullet-move-vec
+  (is (= (neg? (xcrd (bullet-move-vec 2)))))
+  (is (= (pos? (xcrd (bullet-move-vec 1)))))
+  (is (= 0.0 (ycrd (bullet-move-vec 1)) (ycrd (bullet-move-vec 2)))))
+
+(deftest test-update-player
+  (is (= {:num 1 :bullets '([20.0 10.0])}
+        (update-player {:num 1 :bullets '([10.0 10.0])} {}))))
 
 (deftest test-hit-player
   (is (= {:health 1} (hit-player {:health 0})))
