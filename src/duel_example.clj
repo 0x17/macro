@@ -43,7 +43,7 @@
 (defn try-shoot [player]
   (if (player-dead? player)
     player
-    (limit-rate (keyword (str "shooting" (:num player))) reload-time (shoot player))))
+    (limit-rate-else player (keyword (str "shooting" (:num player))) reload-time (shoot player))))
 
 (deflazy bullet-move-vec (fn [num] [(* (if (= num 1) 1.0 (- 1.0)) bullet-move-speed) 0.0]))
 
@@ -55,15 +55,15 @@
    Input$Keys/RIGHT         [(mv-pl move-speed 0) 0]
    Input$Keys/UP            [(mv-pl 0 move-speed) 0]
    Input$Keys/DOWN          [(mv-pl 0 (- move-speed)) 0]
-   Input$Keys/CONTROL_LEFT  [shoot 0]
-   Input$Keys/SPACE         [shoot 0]
+   Input$Keys/CONTROL_LEFT  [try-shoot 0]
+   Input$Keys/SPACE         [try-shoot 0]
    Input$Keys/A             [(mv-pl (- move-speed) 0) 1]
    Input$Keys/D             [(mv-pl move-speed 0) 1]
    Input$Keys/W             [(mv-pl 0 move-speed) 1]
    Input$Keys/S             [(mv-pl 0 (- move-speed)) 1]
-   Input$Keys/CONTROL_RIGHT [shoot 1]
-   Input$Keys/ENTER         [shoot 1]
-   Input$Keys/ALT_RIGHT     [shoot 1]})
+   Input$Keys/CONTROL_RIGHT [try-shoot 1]
+   Input$Keys/ENTER         [try-shoot 1]
+   Input$Keys/ALT_RIGHT     [try-shoot 1]})
 
 (defn update-state-with-action [passed-state action-pair]
   (assoc-in passed-state [:players (second action-pair)]
@@ -114,15 +114,29 @@
         player-rect (rect-from-pos-dim (:pos player) player-dim)]
     (Intersector/overlapRectangles bullet-rect player-rect)))
 
-(defn bullet-bullet-coll [b1pos b2pos bdim]
-  (let [b1-rect (rect-from-pos-dim b1pos bdim)
-        b2-rect (rect-from-pos-dim b2pos bdim)]
+(defn bullet-bullet-coll [b1pos b2pos]
+  (let [b1-rect (rect-from-pos-dim b1pos bullet-dim)
+        b2-rect (rect-from-pos-dim b2pos bullet-dim)]
     (if (Intersector/overlapRectangles b1-rect b2-rect) [b1pos b2pos] nil)))
 
-(defn check-player-bullet-collisions [players pdim bdim]
-  (letfn [(remove-collided [x2 oldbullets] (remove (partial player-bullet-coll (nth players x2) pdim bdim) oldbullets))
-          (check-collision [[x1 x2]] (fassoc (nth players x1) :bullets (partial remove-collided x2)))]
-    (mapv check-collision  [[0 1] [1 0]])))
+(defn hit-player [player] (fassoc player :health (if (player-dead? player) identity ++)))
+
+(defn check-for-hit [hit-player-pairs]
+  (let [p1orig (-> hit-player-pairs first second)
+        p2orig (-> hit-player-pairs second second)
+        p1hit? (-> hit-player-pairs second first)
+        p2hit? (-> hit-player-pairs first first)
+        p1 (if p1hit? (hit-player p1orig) p1orig)
+        p2 (if p2hit? (hit-player p2orig) p2orig)]
+    [p1 p2]))
+
+(defn check-player-bullet-collisions [players]
+  (letfn [(remove-collided [x2 oldbullets] (remove (partial player-bullet-coll (nth players x2)) oldbullets))
+          (check-collision [[x1 x2]]
+            (let [prevbullets (:bullets (players x1))
+                  curbullets (remove-collided x2 prevbullets)]
+              [(< (count curbullets) (count prevbullets)) (assoc (players x1) :bullets curbullets)]))]
+    (check-for-hit (mapv check-collision [[0 1] [1 0]]))))
 
 (defn check-bullet-bullet-collisions [players]
   (let [colliding-pairs (remove nil? (map bullet-bullet-coll (:bullets (players 0)) (:bullets (players 1))))
@@ -141,15 +155,11 @@
   (draw-text (str "P1 score " (-> state :players first :kills)) 100 100)
   (draw-text (str "P2 score " (-> state :players second :kills)) 500 100))
 
-(defn hit-player [player] (fassoc player :health (if (player-dead? player) identity ++)))
-
 (defn render-scene [state]
   (draw-image "background" 0 0)
   (foreach draw-player (:players state))
   (draw-overlay state)
-  (->> state
-    #(fassoc % :players update-players)
-    #(fassoc % :players (comp check-bullet-bullet-collisions check-player-bullet-collisions))))
+  (fassoc state :players (comp check-bullet-bullet-collisions check-player-bullet-collisions update-players)))
 
 (defn draw-cb [delta state] (-> state process-input render-scene))
 

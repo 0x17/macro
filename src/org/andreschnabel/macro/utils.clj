@@ -92,6 +92,11 @@
   `(if (> (- (ticks) (put-or-keep last-calls ~sym (fn [] 0))) ~min-delay)
      ~(cons 'do (cons `(assoc-in-place last-calls ~sym (ticks)) body))))
 
+(defmacro limit-rate-else [elseval sym min-delay & body]
+  `(if (> (- (ticks) (put-or-keep last-calls ~sym (fn [] 0))) ~min-delay)
+     ~(cons 'do (cons `(assoc-in-place last-calls ~sym (ticks)) body))
+     ~elseval))
+
 (defn ++ [x] (+ 1 x))
 
 (defn set-diff [a b]
