@@ -69,20 +69,18 @@
      (fn (~args ~body)
        ([param-to-val#] (let [{:keys ~args} param-to-val#] ~body)))))
 
+(defmacro defn-destr-merge [name args body]
+  `(def ~name
+     (fn (~args ~body)
+       ([param-to-val#] (let [{:keys ~args} param-to-val#] (merge param-to-val# ~body))))))
+
 (defmacro deflazy [name init-func]
   `(def ~name (memoize ~init-func)))
 
-(defn group-pairs [elems]
-  (if (empty? elems)
-    '()
-    (cons [(first elems) (second elems)]
-      (group-pairs (-> elems rest rest)))))
-
 (defmacro defbatch [& pairs]
-  (cons 'do
-    (->> pairs
-         group-pairs
-         (map #(list 'def (first %) (second %))))))
+  (let [names (take-nth 2 pairs)
+        vals (take-nth 2 (rest pairs))]
+    (cons 'do (map (fn [name val] `(def ~name ~val)) names vals))))
 
 (defmacro foreach [f coll]
   `(doseq [elem# ~coll] (~f elem#)))
