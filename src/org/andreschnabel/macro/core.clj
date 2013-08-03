@@ -21,32 +21,33 @@
 (defn scr-w [] (utils/width @scr-dims))
 (defn scr-h [] (utils/height @scr-dims))
 
+(defn- dispose-all []
+  (utils/foreach utils/safe-dispose (vals @sounds))
+  (utils/foreach utils/safe-dispose (vals @songs))
+  (utils/foreach utils/safe-dispose (list @font (atlas) (sb))))
+
 (def state (atom nil))
+
+(defn- app-listener [init-cb draw-cb]
+  (proxy [ApplicationListener] []
+    (create []
+      (.glClearColor Gdx/gl 0.0 0.0 0.0 1.0)
+      (reset! state (init-cb)))
+    (resize [w h]
+      (reset! scr-dims (vector w h)))
+    (render []
+      (.glClear Gdx/gl GL10/GL_COLOR_BUFFER_BIT)
+      (.begin (sb))
+      (swap! state (partial draw-cb (.getDeltaTime Gdx/graphics)))
+      (.end (sb)))
+    (pause [])
+    (resume [])
+    (dispose []
+      (dispose-all))))
+
 (defn init [caption scr-size init-cb draw-cb]
-  (letfn [(dispose-all []
-            (utils/foreach utils/safe-dispose (vals @sounds))
-            (utils/foreach utils/safe-dispose (vals @songs))
-            (utils/safe-dispose @font)
-            (utils/safe-dispose (atlas))
-            (utils/safe-dispose (sb)))
-          (app-listener [init-cb draw-cb]
-            (proxy [ApplicationListener] []
-              (create []
-                (.glClearColor Gdx/gl 0.0 0.0 0.0 1.0)
-                (reset! state (init-cb)))
-              (resize [w h]
-                (reset! scr-dims (vector w h)))
-              (render []
-                (.glClear Gdx/gl GL10/GL_COLOR_BUFFER_BIT)
-                (.begin (sb))
-                (swap! state (partial draw-cb (.getDeltaTime Gdx/graphics)))
-                (.end (sb)))
-              (pause [])
-              (resume [])
-              (dispose []
-                (dispose-all))))]
     (reset! scr-dims scr-size)
-    (LwjglApplication. (app-listener init-cb draw-cb) caption (scr-w) (scr-h) false)))
+    (LwjglApplication. (app-listener init-cb draw-cb) caption (scr-w) (scr-h) false))
 
 (defn draw-image
   ([name x y] (draw-image name x y 0.0))

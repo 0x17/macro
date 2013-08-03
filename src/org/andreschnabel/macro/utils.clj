@@ -26,9 +26,7 @@
     (reset! m (assoc @m key (gen-func))))
   (@m key))
 
-(defn safe-dispose [obj]
-  (if (not (nil? obj))
-    (.dispose obj)))
+(defn safe-dispose [obj] (when-not (nil? obj) (.dispose obj)))
 
 (defn assoc-in-place [m-atom key val]
   (reset! m-atom (assoc @m-atom key val)))
