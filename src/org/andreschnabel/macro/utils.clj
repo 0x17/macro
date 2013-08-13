@@ -35,7 +35,7 @@
   (reset! m-atom (assoc @m-atom key (f (@m-atom key)))))
 
 (defn fassoc [m key f]
-  (assoc m key (f (m key))))
+  (update-in m [key] f))
 
 (defn assoc-if [cond m key val]
   (if cond (assoc m key val) m))
